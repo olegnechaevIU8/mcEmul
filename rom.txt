@@ -1,0 +1,7 @@
+get $1 1
+get $2 2
+get $3 3
+mov 40 $3
+xor $1 $2
+xor $1 40
+set $1 0
