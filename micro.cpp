@@ -1,130 +1,6 @@
 #include "micro.h"
 
-void micro::mov(uint8_t* a, uint8_t* b)
-{
-	*a = *b;
-	cout << "moved" << endl;
-}
-
-void micro::add(uint8_t* a, uint8_t* b)
-{
-	*a += *b;
-	cout << "+" << endl;
-}
-
-void micro::sub(uint8_t* a, uint8_t* b)
-{
-	*a -= *b;
-	cout << "-" << endl;
-}
-
-void micro::mul(uint8_t* a, uint8_t* b)
-{
-	*a *= *b;
-	cout << "-" << endl;
-}
-
-void micro::div(uint8_t* a, uint8_t* b)
-{
-	*a /= *b;
-	cout << "//" << endl;
-}
-
-void micro::mod(uint8_t* a, uint8_t* b)
-{
-	*a %= *b;
-	cout << "%" << endl;
-}
-
-void micro:: and (uint8_t* a, uint8_t* b)
-{
-	*a &= *b;
-	cout << "&" << endl;
-}
-
-void micro:: or (uint8_t* a, uint8_t* b)
-{
-	*a |= *b;
-	cout << "|" << endl;
-}
-
-void micro:: xor (uint8_t* a, uint8_t* b)
-{
-	*a ^= *b;
-	cout << "^" << endl;
-}
-
-void micro::shl(uint8_t* a, uint8_t* b)
-{
-	*a <<= *b;
-	cout << "<<" << endl;
-}
-
-void micro::shr(uint8_t* a, uint8_t* b)
-{
-	*a >>= *b;
-	cout << ">>" << endl;
-}
-
-void micro::cmp(uint8_t* a, uint8_t* b)
-{
-	if (*a == *b)
-		cf = 0;
-	else
-	{
-		if (*a > *b)
-			cf = 1;
-		else
-			cf = -1;
-	}
-	cout << "cmp" << endl;
-}
-
-void micro::jg(uint8_t* a)
-{
-	if (*a > rom.size())
-		throw exception("trying going to wrong memmory!");
-	if (cf == 1)
-		pc = *a;
-	cout << "jg" << endl;
-}
-
-void micro::jge(uint8_t* a)
-{
-	if (*a > rom.size())
-		throw exception("trying going to wrong memmory!");
-	if ((cf == 1) || (cf == 0))
-		pc = *a;
-	cout << "jge" << endl;
-}
-
-void micro::jl(uint8_t* a)
-{
-	if (*a > rom.size())
-		throw exception("trying going to wrong memmory!");
-	if (cf == -1)
-		pc = *a;
-	cout << "jl" << endl;
-}
-
-void micro::jle(uint8_t* a)
-{
-	if (*a > rom.size())
-		throw exception("trying going to wrong memmory!");
-	if ((cf == -1) || (cf == 0))
-		pc = *a;
-	cout << "jle" << endl;
-}
-
-void micro::jmp(uint8_t* a)
-{
-	if (*a > rom.size())
-		throw exception("trying going to wrong memmory!");
-	pc = *a;
-	cout << "jmp" << endl;
-}
-
-bool micro::getPin(size_t i)
+int micro::getPin(size_t i)
 {
 	if (pins[i].wr != 0)
 		throw exception("trying to read not input pin!");
@@ -153,6 +29,12 @@ void micro::setRom(string f)
 		rom.push_back(s);
 	}
 	file.close();
+	if (rom.size() > 255)
+	{
+		cout << "abort instalation, rom too big!!!";
+		rom.clear();
+		return;
+	}
 	cout << "rom installed!" << endl;
 }
 
@@ -176,6 +58,27 @@ void micro::getDefPin()
 			pins[i].file << '!' << pins[i].leg << endl;
 			cout << "pinne " << i << " outputted!" << endl;
 		}
+}
+
+void micro::help()
+{
+	cout << "--- tx [pin] - read from pin" << endl;
+	cout << "--- rx [pin] - write to pin" << endl;
+	cout << "--- rom [file] - get rom" << endl;
+	cout << "--- run - \\ " << endl;
+	cout << "--- adv - \\debug " << endl;
+}
+
+void micro::advhelp()
+{
+	cout << "--- next - next command" << endl;
+	cout << "--- show_rom - \\" << endl;
+	cout << "--- next_rom - show next command" << endl;
+	cout << "--- reg - show registers " << endl;
+	cout << "--- pin - show pins " << endl;
+	cout << "--- ram - show ram" << endl;
+	cout << "--- fin - do all commands to finish" << endl;
+	cout << "--- exuc - exit debug" << endl;
 }
 
 micro::micro() : pc(0)
@@ -217,6 +120,13 @@ void micro::next() try
 			else
 				mov(ram + stoi(fo), ram + stoi(so));
 		}
+	}
+	else if (com == "new")
+	{
+		string fo, so;
+		ss >> fo >> so;
+		uint8_t a = stoi(so);
+		mov(reg + (fo[1] - '0'), &a);
 	}
 	else if (com == "add")
 	{
@@ -388,17 +298,33 @@ bool micro::getcommands() try
 
 	if (line == "rx")//vuvod
 	{
-		string fo, so;
-		ss >> fo >> so;
-		pins[stoi(fo)].file.open(so);
+		string fo;
+		ss >> fo;
+		string a;
+		a = "pins/" + fo + ".txt";
+		pins[stoi(fo)].file.open(a);
+		//pins[stoi(fo)].file.clear();
 		pins[stoi(fo)].wr = 1;
 	}
 	else if (line == "tx")//vvod
 	{
-		string fo, so;
-		ss >> fo >> so;
-		pins[stoi(fo)].file.open(so);
+		string fo;
+		ss >> fo;
+		string a;
+		a = "pins/" + fo + ".txt";
+		pins[stoi(fo)].file.open(a);
 		pins[stoi(fo)].wr = 0;
+	}
+	else if (line == "adv")//
+	{
+		pc = 0;
+		setDefPin();
+		while (pc < rom.size())
+		{
+			advanced();
+			//pc++;
+		}
+		getDefPin();
 	}
 	else if (line == "rom")//prosh
 	{
@@ -417,10 +343,84 @@ bool micro::getcommands() try
 		}
 		getDefPin();
 	}
+	else if (line == "help")
+	{
+		help();
+	}
 	else if (line == "exit")
-		return 0;
+		return false;
 
 	else cout << "wrong command!" << endl;
-	return 1;
+	return true;
+}
+catch (exception ex) 
+{ 
+	cout << ex.what() << endl; 
+	return true; 
+}
+
+void micro::advanced() try
+{
+	cout << ">>";
+	string line;
+	getline(cin, line);
+	stringstream ss(line);
+	ss >> line;
+	if (line == "next")
+	{
+		next();
+		pc++;
+	}
+	else if (line == "show_rom")
+	{
+		for (auto i : rom)
+		{
+			cout << i << endl;
+		}
+	}
+	else if (line == "next_rom")
+	{
+		cout << rom[pc] << endl;
+	}
+	else if (line == "reg")
+	{
+		for (int i = 0;i < 4;i++)
+		{
+			printf("%d %d \n", i, reg[i]);
+		}
+	}
+	else if (line == "pin")
+	{
+		for (int i = 0;i < 6;i++)
+		{
+			printf("%d %d \n", i, pins[i].leg);
+		}
+	}
+	else if (line == "exuc")
+	{
+		pc = rom.size();
+		return;
+	}
+	else if (line == "ram")
+	{
+		for (int i = 0;i < 16;i++)
+		{
+			printf("%d %d \n", i, ram[i]);
+		}
+	}
+	else if (line == "fin")
+	{
+		while (pc < rom.size())
+		{
+			next();
+			pc++;
+		}
+	}
+	else if (line == "help")
+	{
+		advhelp();
+	}
+	else cout << "wrong command!" << endl;
+
 }
 catch (exception ex) { cout << ex.what() << endl; }
