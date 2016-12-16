@@ -11,7 +11,7 @@ class pin
 {
 public:
 	fstream file;
-	bool leg;
+	int leg;
 	int wr;
 };
 
@@ -27,6 +27,7 @@ protected:
 	vector<string> rom;
 	uint8_t pc;
 
+	//äëÿ ðàáîòû ñ ïàìÿòüþ è ïðî÷åå
 	void mov(uint8_t* a, uint8_t* b);	
 	void add(uint8_t* a, uint8_t* b);	
 	void sub(uint8_t* a, uint8_t* b);	
@@ -43,14 +44,19 @@ protected:
 	void jge(uint8_t* a);	
 	void jl(uint8_t* a);	
 	void jle(uint8_t* a);	
-	void jmp(uint8_t* a);	
-	bool getPin(size_t i);	
+	void jmp(uint8_t* a);
+
+	//ïèíû
+	int getPin(size_t i);	
 	void setPin(size_t i, bool s);	
+	void setDefPin();
+	void getDefPin();
 
 	void setRom(string f);
-	void setDefPin();	
-	void getDefPin();	
 	void next();
+	void advanced();
+	void help();
+	void advhelp();
 public:
 	micro();
 	~micro();			
